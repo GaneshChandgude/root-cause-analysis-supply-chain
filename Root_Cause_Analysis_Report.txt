@@ -1,0 +1,41 @@
+Here is the Root Cause Analysis report for the stockouts during the TechGadget Pro promotion:
+
+Executive Summary:
+During the TechGadget Pro promotion from May 1 to May 7, 2024, stores experienced significant stockouts. Analysis of sales and inventory data reveals that the primary causes were supply chain disruptions leading to delayed replenishments and inventory mismanagement, including shrinkage and reactive emergency stock transfers. These issues, combined with increased promotional demand, led to stock depletion and sales declines.
+
+Primary Root Causes:
+- Supply chain disruptions causing delays in promotional stock replenishment by 2 days across all major stores.
+- Inventory mismanagement manifested as shrinkage, damaged goods adjustments, and emergency inter-store stock transfers.
+
+Supporting Evidence:
+- Sales data showed a sharp increase in demand during the first three days of the promotion, followed by a rapid decline consistent with stockouts.
+- Inventory records confirmed delayed arrival of promotional stock, multiple shrinkage adjustments before and during the promotion, and emergency stock transfers indicating reactive management.
+- The decline in sales aligned temporally with inventory depletion and replenishment delays.
+
+Contributing Factors:
+- Promotional demand exceeded normal forecasts, intensifying stock pressure.
+- Emergency stock transfers were reactive rather than proactive, reflecting insufficient pre-promotion inventory planning.
+- Inventory inaccuracies due to shrinkage and damaged goods reduced available stock.
+- Logistical challenges impacted timely distribution of inventory.
+
+Key Data Points:
+- Promotion sales peaked early: e.g., Downtown Store sold 192 units during the promotion.
+- Delayed replenishments arrived two days late, starting May 3.
+- Shrinkage adjustments ranged from 8 to 22 units across stores before and during promotion.
+- Emergency transfer of 50 units from Northgate Center to Westside Mall on May 1.
+
+Timeline of Events:
+- April 28-29: Inventory shrinkage and damaged goods adjustments detected.
+- May 1: Promotion start; emergency stock transfer executed.
+- May 3: Delayed promotional stock replenishments arrive.
+- May 4: Additional shrinkage adjustments found during stockout investigations.
+- May 7: Promotion ends; inventory levels begin recovery.
+
+Recommendations:
+- Enhance supply chain scheduling and communication to prevent replenishment delays during promotions.
+- Increase frequency and accuracy of cycle counts to detect and reduce inventory shrinkage.
+- Develop proactive stock transfer plans to avoid emergency reallocations during high demand.
+- Improve logistics and distribution processes to support timely inventory availability.
+
+Final Conclusion:
+The stockouts during the TechGadget Pro promotion were primarily caused by delayed promotional stock replenishments and inventory mismanagement exacerbated by higher-than-expected demand. Addressing supply chain timing, inventory accuracy, and proactive stock management will be critical to preventing similar issues in future promotional events.
