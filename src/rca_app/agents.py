@@ -10,9 +10,12 @@ from langmem import create_manage_memory_tool, create_search_memory_tool
 
 from .config import AppConfig
 from .llm import get_llm_model
+from .mcp_servers import (
+    build_mcp_tools,
+    build_salesforce_mcp_client,
+    build_sap_business_one_mcp_client,
+)
 from .memory import build_memory_augmented_prompt, append_rca_history
-from .tools_inventory import build_inventory_tools
-from .tools_sales import build_sales_tools
 from .types import RCAState
 from .utils import filter_tool_messages, handle_tool_errors, process_response, serialize_messages
 
@@ -85,7 +88,9 @@ JSON schema:
 
 
 def build_sales_analysis_tool(config: AppConfig, store, checkpointer, llm):
-    sales_tools = build_sales_tools(config)
+    salesforce_client = build_salesforce_mcp_client(config)
+    salesforce_tools = build_mcp_tools(salesforce_client)
+    sales_tools = list(salesforce_tools)
     sales_tools += [
         create_manage_memory_tool(namespace=("sales", "{user_id}")),
         create_search_memory_tool(namespace=("sales", "{user_id}")),
@@ -169,11 +174,13 @@ Hypotheses: {sales_related_hypotheses}
 
         return {"sales_insights": sales_insights, "trace": [trace_entry]}
 
-    return sales_analysis_agent_tool, sales_tools
+    return sales_analysis_agent_tool, salesforce_tools
 
 
 def build_inventory_analysis_tool(config: AppConfig, store, checkpointer, llm, promo_tool):
-    inventory_tools = [promo_tool] + build_inventory_tools(config)
+    sap_business_one_client = build_sap_business_one_mcp_client(config)
+    sap_business_one_tools = build_mcp_tools(sap_business_one_client)
+    inventory_tools = [promo_tool] + list(sap_business_one_tools)
     inventory_tools += [
         create_manage_memory_tool(namespace=("inventory", "{user_id}")),
         create_search_memory_tool(namespace=("inventory", "{user_id}")),
@@ -640,8 +647,8 @@ deep-research agent, not a fixed pipeline.
 def build_agents(config: AppConfig, store, checkpointer):
     llm = get_llm_model(config)
     hypothesis_tool = build_hypothesis_tool(config, store, checkpointer, llm)
-    sales_tool, sales_tools = build_sales_analysis_tool(config, store, checkpointer, llm)
-    promo_tool = next(tool for tool in sales_tools if tool.name == "get_promo_period")
+    sales_tool, salesforce_tools = build_sales_analysis_tool(config, store, checkpointer, llm)
+    promo_tool = next(tool for tool in salesforce_tools if tool.name == "get_promo_period")
     inventory_tool = build_inventory_analysis_tool(config, store, checkpointer, llm, promo_tool)
     validation_tool = build_validation_tool(config, store, checkpointer, llm)
     root_cause_tool = build_root_cause_tool(config, store, checkpointer, llm)
