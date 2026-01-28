@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import importlib.util
 from typing import Any, Dict, Iterable, List
 
 from langchain_core.tools import StructuredTool
@@ -27,6 +28,18 @@ def _run_coro(coro):
     raise RuntimeError("MCP client invoked from a running event loop.")
 
 
+def _load_mcp_client() -> tuple[Any, Any]:
+    if importlib.util.find_spec("mcp") is None:
+        raise ModuleNotFoundError(
+            "Missing 'mcp' dependency. Install it with `pip install mcp` "
+            "or add it to your environment before using MCP toolsets."
+        )
+    from mcp.client import ClientSession
+    from mcp.client.sse import sse_client
+
+    return ClientSession, sse_client
+
+
 def _tool_field(tool_info: Any, field: str, fallback: str | None = None) -> Any:
     if isinstance(tool_info, dict):
         return tool_info.get(field) or (tool_info.get(fallback) if fallback else None)
@@ -45,8 +58,7 @@ class MCPToolsetClient:
         return _run_coro(self._call_tool(tool_name, arguments))
 
     async def _list_tools(self) -> List[Any]:
-        from mcp.client import ClientSession
-        from mcp.client.sse import sse_client
+        ClientSession, sse_client = _load_mcp_client()
 
         async with sse_client(self.sse_url) as (read, write):
             async with ClientSession(read, write) as session:
@@ -58,8 +70,7 @@ class MCPToolsetClient:
         return getattr(result, "tools", result)
 
     async def _call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
-        from mcp.client import ClientSession
-        from mcp.client.sse import sse_client
+        ClientSession, sse_client = _load_mcp_client()
 
         async with sse_client(self.sse_url) as (read, write):
             async with ClientSession(read, write) as session:
