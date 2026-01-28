@@ -1,32 +1,38 @@
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.store.memory import InMemoryStore
+from langgraph.store.base import BaseStore
 
 from .config import AppConfig
 from .llm import get_embeddings
+from .persistent_store import SQLiteBackedStore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class MemoryStores:
-    store: InMemoryStore
+    store: BaseStore
     checkpointer: InMemorySaver
 
 
 def setup_memory(config: AppConfig) -> MemoryStores:
     embed = get_embeddings(config)
-    store = InMemoryStore(
+    store = SQLiteBackedStore(
+        config.data_dir / "memory_store.sqlite",
         index={
             "dims": 1536,
             "embed": embed,
         }
     )
     checkpointer = InMemorySaver()
+    logger.info("Memory store initialized using SQLite at %s", config.data_dir / "memory_store.sqlite")
     return MemoryStores(store=store, checkpointer=checkpointer)
 
 
@@ -35,19 +41,20 @@ def append_rca_history(state: Dict[str, Any]) -> None:
         state.setdefault("history", []).append(HumanMessage(content=state["task"]))
     if state.get("output"):
         state.setdefault("history", []).append(AIMessage(content=state["output"]))
+    logger.debug("Appended RCA history entries; total=%s", len(state.get("history", [])))
 
 
-def episodic_recall(query: str, store: InMemoryStore, config: Dict[str, Any]):
+def episodic_recall(query: str, store: BaseStore, config: Dict[str, Any]):
     namespace = ("episodic", config["configurable"]["user_id"])
     return store.search(namespace, query=query, limit=1)
 
 
-def procedural_recall(task: str, store: InMemoryStore, config: Dict[str, Any]):
+def procedural_recall(task: str, store: BaseStore, config: Dict[str, Any]):
     namespace = ("procedural", config["configurable"]["user_id"])
     return store.search(namespace, query=task, limit=3)
 
 
-def semantic_recall(query: str, store: InMemoryStore, config: Dict[str, Any], limit: int = 3):
+def semantic_recall(query: str, store: BaseStore, config: Dict[str, Any], limit: int = 3):
     namespace = ("semantic", config["configurable"]["user_id"])
     results = store.search(namespace, query=query, limit=limit * 2)
 
@@ -73,7 +80,7 @@ def build_memory_augmented_prompt(
     query: str,
     state: Dict[str, Any],
     config: Dict[str, Any],
-    store: InMemoryStore,
+    store: BaseStore,
 ) -> str:
     semantic_memories = semantic_recall(query, store, config, 3)
 

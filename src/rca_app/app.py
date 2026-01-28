@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any, Dict
 
 from langgraph.graph import StateGraph
 
 from .agents import build_agents, orchestration_agent
 from .config import AppConfig
+from .logging_utils import configure_logging
 from .memory import setup_memory
 from .types import RCAState
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class RCAApp:
@@ -22,6 +25,9 @@ class RCAApp:
 
 
 def build_app(config: AppConfig) -> RCAApp:
+    log_path = configure_logging(config)
+    logger.info("Logging initialized at %s", log_path)
+    logger.info("Building RCA application")
     memory = setup_memory(config)
     store = memory.store
     checkpointer = memory.checkpointer
@@ -38,6 +44,7 @@ def build_app(config: AppConfig) -> RCAApp:
     graph.set_entry_point("orchestration_agent")
     app = graph.compile(checkpointer=checkpointer, store=store)
 
+    logger.info("RCA application build complete")
     return RCAApp(
         config=config,
         store=store,
@@ -54,6 +61,6 @@ def run_rca(app: RCAApp, task: str, user_id: str, query_id: str) -> Dict[str, An
         "task": task,
         "output": "",
         "trace": [],
-        "history": [],
     }
+    logger.info("Running RCA for user_id=%s query_id=%s", user_id, query_id)
     return app.app.invoke(rca_state, config)
