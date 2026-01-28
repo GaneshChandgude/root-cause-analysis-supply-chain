@@ -16,6 +16,8 @@ class AppConfig:
     embeddings_api_key: str
     embeddings_api_version: str
     data_dir: Path
+    salesforce_mcp_url: str
+    sap_business_one_mcp_url: str
 
 
 DEFAULT_AZURE_API_VERSION = "2024-12-01-preview"
@@ -48,4 +50,6 @@ def load_config() -> AppConfig:
         embeddings_api_key=embeddings_api_key,
         embeddings_api_version=os.getenv("AZURE_OPENAI_EMBEDDINGS_API_VERSION", DEFAULT_EMBEDDINGS_API_VERSION),
         data_dir=resolve_data_dir(),
+        salesforce_mcp_url=os.getenv("SALESFORCE_MCP_URL", "http://localhost:8000/sse"),
+        sap_business_one_mcp_url=os.getenv("SAP_BUSINESS_ONE_MCP_URL", "http://localhost:8001/sse"),
     )
