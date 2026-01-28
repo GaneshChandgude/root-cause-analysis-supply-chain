@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any, Dict, List
 
 from .app import RCAApp, run_rca
+
+logger = logging.getLogger(__name__)
 
 
 TOOL_TO_AGENT = {
@@ -201,7 +204,8 @@ def extract_validated(result: Dict[str, Any]) -> Dict[str, Any]:
 
 def run_rca_with_memory(app: RCAApp, task: str) -> Dict[str, Any]:
     config = {"configurable": {"user_id": "eval_user", "thread_id": "eval_thread", "memory_enabled": True}}
-    rca_state = {"task": task, "trace": []}
+    rca_state = {"task": task, "output": "", "trace": []}
+    logger.info("Running RCA evaluation with memory")
     result = app.app.invoke(rca_state, config)
     normalized_trace = normalize_trace(result.get("trace"))
     return {
@@ -216,7 +220,8 @@ def run_rca_without_memory(app: RCAApp, task: str) -> Dict[str, Any]:
     config = {
         "configurable": {"user_id": "eval_user_nomem", "thread_id": "eval_thread_nomem", "memory_enabled": False}
     }
-    empty_state = {"task": task, "trace": []}
+    empty_state = {"task": task, "output": "", "trace": []}
+    logger.info("Running RCA evaluation without memory")
     result = app.app.invoke(empty_state, config)
     return {
         "root_cause": extract_root_cause(result),

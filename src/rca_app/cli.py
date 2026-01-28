@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 
 from .app import build_app
 from .config import load_config
 from .memory import mark_memory_useful, semantic_recall
 from .memory_reflection import add_episodic_memory, add_procedural_memory, build_semantic_memory
 
+logger = logging.getLogger(__name__)
 
 def run_chat():
     config = load_config()
     app = build_app(config)
+    logger.info("Starting RCA chat session")
 
     print("\nRCA Chatbot (type 'exit' to quit)\n")
     default_user_id = "2"
@@ -30,6 +33,7 @@ def run_chat():
 
         if user_input.lower() in {"exit", "quit"}:
             if last_state and last_config:
+                logger.info("Persisting memories for user_id=%s", last_config["configurable"]["user_id"])
                 add_episodic_memory(last_state, last_config, app.store, app.llm)
                 build_semantic_memory(
                     user_id=last_config["configurable"]["user_id"],
@@ -46,13 +50,14 @@ def run_chat():
             break
 
         config_dict = {"configurable": {"user_id": user_id, "thread_id": query_id}}
-        rca_state = {"task": user_input, "output": "", "trace": [], "history": []}
+        rca_state = {"task": user_input, "output": "", "trace": []}
 
         print("\n" + "-" * 70)
         print(" RCA Bot is thinking...")
         print("-" * 70)
 
         rca_state = app.app.invoke(rca_state, config_dict)
+        logger.info("RCA response generated")
 
         print("\n RCA Bot Answer")
         print("-" * 70)
@@ -68,6 +73,7 @@ def inspect_memory():
     config = load_config()
     app = build_app(config)
     user_id = "2"
+    logger.info("Inspecting memory for user_id=%s", user_id)
 
     print("\n--------------------------------------------------------------------------")
     print("memory inspector")

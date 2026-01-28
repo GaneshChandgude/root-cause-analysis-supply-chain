@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List
 
 from langchain.agents import create_agent
@@ -16,6 +17,7 @@ from .tools_sales import build_sales_tools
 from .types import RCAState
 from .utils import filter_tool_messages, handle_tool_errors, process_response, serialize_messages
 
+logger = logging.getLogger(__name__)
 
 def build_hypothesis_tool(config: AppConfig, store, checkpointer, llm):
     hypothesis_react_agent = create_agent(
@@ -673,6 +675,7 @@ Use the following structured RCA output:
 
 
 def build_router_agent(config: AppConfig, store, checkpointer, llm, tools):
+    logger.info("Building router agent with %s tools", len(tools))
     return create_agent(
         model=llm,
         tools=tools,
@@ -685,6 +688,7 @@ def build_router_agent(config: AppConfig, store, checkpointer, llm, tools):
 def orchestration_agent(rca_state: RCAState, config: Dict[str, Any], store, router_agent):
     if not rca_state.get("history"):
         rca_state["history"] = []
+        logger.debug("Initialized empty history in RCA state")
 
     memory_context = build_memory_augmented_prompt(
         query=rca_state["task"],
@@ -785,6 +789,7 @@ deep-research agent, not a fixed pipeline.
 
     rca_state["output"] = final_msg
     rca_state["trace"] = trace_entry
+    logger.info("Orchestration agent completed for user_id=%s", config["configurable"]["user_id"])
 
     append_rca_history(rca_state)
 
@@ -792,6 +797,7 @@ deep-research agent, not a fixed pipeline.
 
 
 def build_agents(config: AppConfig, store, checkpointer):
+    logger.info("Initializing RCA agents")
     llm = get_llm_model(config)
     hypothesis_tool = build_hypothesis_tool(config, store, checkpointer, llm)
     sales_tool, sales_tools = build_sales_analysis_tool(config, store, checkpointer, llm)
