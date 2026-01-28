@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from typing import Any, Dict
@@ -9,6 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from .memory import format_conversation
 
+logger = logging.getLogger(__name__)
 
 REFLECTION_PROMPT_TEMPLATE = """
 You are analyzing conversations from a supply-chain Root Cause Analysis (RCA) assistant to create episodic memories that will improve future RCA interactions.
@@ -103,6 +105,7 @@ def build_semantic_chain(llm):
 def add_episodic_memory(rca_state, config, store, llm) -> None:
     history = rca_state.get("history")
     if not history:
+        logger.debug("Skipping episodic memory; no history found")
         return
 
     conversation = format_conversation(history)
@@ -115,11 +118,13 @@ def add_episodic_memory(rca_state, config, store, llm) -> None:
         key=f"episodic_rca_{uuid.uuid4().hex}",
         value=reflection,
     )
+    logger.info("Episodic memory stored for user_id=%s", config["configurable"]["user_id"])
 
 
 def add_procedural_memory(rca_state, config, store, llm) -> None:
     history = rca_state.get("history")
     if not history:
+        logger.debug("Skipping procedural memory; no history found")
         return
 
     conversation = format_conversation(history)
@@ -131,6 +136,7 @@ def add_procedural_memory(rca_state, config, store, llm) -> None:
         key=f"procedural_rca_{uuid.uuid4().hex}",
         value=reflection,
     )
+    logger.info("Procedural memory stored for user_id=%s", config["configurable"]["user_id"])
 
 
 def build_semantic_memory(
@@ -142,6 +148,7 @@ def build_semantic_memory(
 ) -> Dict[str, Any] | None:
     episodic = store.search(("episodic", user_id), query=query, limit=10)
     if len(episodic) < min_episodes:
+        logger.debug("Insufficient episodic memories for semantic reflection; count=%s", len(episodic))
         return None
 
     episodes_text = []
@@ -167,5 +174,6 @@ def build_semantic_memory(
         key=f"semantic_{uuid.uuid4().hex}",
         value=semantic,
     )
+    logger.info("Semantic memory stored for user_id=%s", user_id)
 
     return semantic
